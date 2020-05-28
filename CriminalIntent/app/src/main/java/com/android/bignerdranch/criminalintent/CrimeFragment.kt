@@ -3,7 +3,7 @@ package com.android.bignerdranch.criminalintent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,17 +15,22 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import java.util.*
 
-private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
+private const val DIALOG_TIME = "DialogTime"
 private const val REQUEST_DATE = 0
+private const val REQUEST_TIME = 0
 
-class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
+class CrimeFragment :
+    Fragment(),
+    DatePickerFragment.Callbacks,
+    TimePickerFragment.Callbacks {
 
     private lateinit var crime: Crime
     private lateinit var titleField: EditText
     private lateinit var dateButton: Button
     private lateinit var solvedCheckBox: CheckBox
+    private lateinit var timeButton: Button
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         val factory = CrimeDetailViewModelFactory()
         ViewModelProvider(this, factory).get(CrimeDetailViewModel::class.java)
@@ -47,6 +52,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         titleField = view.findViewById(R.id.crime_title)
         dateButton = view.findViewById(R.id.crime_date)
         solvedCheckBox = view.findViewById(R.id.crime_solved)
+        timeButton = view.findViewById(R.id.crime_time)
 
         return view
     }
@@ -69,9 +75,15 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         updateUI()
     }
 
+    override fun onTimePicked(date: Date) {
+        crime.date = date
+        updateUI()
+    }
+
     private fun updateUI() {
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
+        dateButton.text = DateFormat.format("""EEEE, MMM dd, yyyy""", crime.date)
+        timeButton.text = DateFormat.format("HH:mm:ss", crime.date)
         solvedCheckBox.apply {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState()
@@ -104,6 +116,13 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
             DatePickerFragment.newInstance(crime.date).apply {
                 setTargetFragment(this@CrimeFragment, REQUEST_DATE)
                 show(this@CrimeFragment.parentFragmentManager, DIALOG_DATE)
+            }
+        }
+
+        timeButton.setOnClickListener {
+            TimePickerFragment.newInstance(crime.date).apply {
+                setTargetFragment(this@CrimeFragment, REQUEST_TIME)
+                show(this@CrimeFragment.parentFragmentManager, DIALOG_TIME)
             }
         }
     }
