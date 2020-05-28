@@ -13,10 +13,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
-import com.android.bignerdranch.criminalintent.CrimeListFragment.Callbacks as Callbacks1
 
 private const val TAG = "CrimeListFragment"
 
@@ -26,14 +27,14 @@ class CrimeListFragment : Fragment() {
         fun onCrimeSelected(crimeId: UUID)
     }
 
-    private var callbacks: Callbacks1? = null
+    private var callbacks: Callbacks? = null
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
         val factory = CrimeListViewModelFactory()
         ViewModelProvider(this, factory).get(CrimeListViewModel::class.java)
     }
     private lateinit var crimeRecyclerView: RecyclerView
-    private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
+    private lateinit var adapter: CrimeAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,7 +45,6 @@ class CrimeListFragment : Fragment() {
 
         crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
-        crimeRecyclerView.adapter = adapter
 
         return view
     }
@@ -75,6 +75,7 @@ class CrimeListFragment : Fragment() {
     private fun updateUI(crimes: List<Crime>) {
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
+        (crimeRecyclerView.adapter as CrimeAdapter).submitList(crimes)
     }
 
     private inner class CrimeHolder(
@@ -94,7 +95,7 @@ class CrimeListFragment : Fragment() {
         fun bind(crime: Crime) {
             this.crime = crime
             titleTextView.text = crime.title
-            dateTextView.text =  DateFormat.format("""EEEE, MMM dd, yyyy.""", crime.date)
+            dateTextView.text = DateFormat.format("""EEEE, MMM dd, yyyy.""", crime.date)
             solvedImageView.visibility = if (crime.isSolved) {
                 View.VISIBLE
             } else {
@@ -109,7 +110,15 @@ class CrimeListFragment : Fragment() {
 
     private inner class CrimeAdapter(
         var crimes: List<Crime>
-    ) : RecyclerView.Adapter<CrimeHolder>() {
+    ) : ListAdapter<Crime, CrimeHolder>(
+        object : DiffUtil.ItemCallback<Crime>() {
+            override fun areItemsTheSame(oldItem: Crime, newItem: Crime) =
+                oldItem == newItem
+
+            override fun areContentsTheSame(oldItem: Crime, newItem: Crime) =
+                oldItem == newItem
+        }
+    ) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeHolder {
             val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
             return CrimeHolder(view)
