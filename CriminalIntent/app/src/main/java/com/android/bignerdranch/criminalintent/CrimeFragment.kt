@@ -17,8 +17,10 @@ import java.util.*
 
 private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
+private const val DIALOG_DATE = "DialogDate"
+private const val REQUEST_DATE = 0
 
-class CrimeFragment : Fragment() {
+class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
 
     private lateinit var crime: Crime
     private lateinit var titleField: EditText
@@ -46,11 +48,6 @@ class CrimeFragment : Fragment() {
         dateButton = view.findViewById(R.id.crime_date)
         solvedCheckBox = view.findViewById(R.id.crime_solved)
 
-        dateButton.apply {
-            text = crime.date.toString()
-            isEnabled = false
-        }
-
         return view
     }
 
@@ -65,6 +62,11 @@ class CrimeFragment : Fragment() {
                 }
             }
         )
+    }
+
+    override fun onDateSelected(date: Date) {
+        crime.date = date
+        updateUI()
     }
 
     private fun updateUI() {
@@ -97,6 +99,13 @@ class CrimeFragment : Fragment() {
                 crime.isSolved = isChecked
             }
         }
+
+        dateButton.setOnClickListener {
+            DatePickerFragment.newInstance(crime.date).apply {
+                setTargetFragment(this@CrimeFragment, REQUEST_DATE)
+                show(this@CrimeFragment.parentFragmentManager, DIALOG_DATE)
+            }
+        }
     }
 
     override fun onStop() {
@@ -106,7 +115,7 @@ class CrimeFragment : Fragment() {
 
     companion object {
         fun newInstance(crimeId: UUID) : CrimeFragment {
-            var args = Bundle().apply {
+            val args = Bundle().apply {
                 putSerializable(ARG_CRIME_ID, crimeId)
             }
             return CrimeFragment().apply {
