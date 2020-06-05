@@ -3,32 +3,48 @@ package com.android.bignerdranch.beatbox
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.ViewGroup
+import android.widget.SeekBar
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.bignerdranch.beatbox.databinding.ActivityMainBinding
 import com.android.bignerdranch.beatbox.databinding.ListItemSoundBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 
-    private lateinit var beatBox: BeatBox
+    private lateinit var beatBoxViewModel: BeatBoxViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        beatBox = BeatBox(assets)
+        val factory = BeatBoxViewModelFactory(assets, application)
+        beatBoxViewModel = ViewModelProvider(this, factory).get(BeatBoxViewModel::class.java)
 
         val binding: ActivityMainBinding =
             DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.recyclerView.apply {
             layoutManager = GridLayoutManager(context, 3)
-            adapter = SoundAdapter(beatBox.sounds)
+            adapter = SoundAdapter(beatBoxViewModel.beatBox.sounds)
         }
+        binding.lifecycleOwner = this
+        binding.beatBoxViewModel = beatBoxViewModel
+        binding.seekBar3.setOnSeekBarChangeListener(this)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        beatBox.release()
+    override fun onProgressChanged(seekBar: SeekBar?, p1: Int, p2: Boolean) {
+        val rate: Float = seekBar?.let {
+            it.progress.toFloat() / 100.0f
+        } ?: 0.0f
+        beatBoxViewModel.onRateChange(rate)
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
     }
 
     private inner class SoundHolder(
@@ -36,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     ) : RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.viewModel = SoundViewModel(beatBox)
+            binding.viewModel = SoundViewModel(beatBoxViewModel.beatBox)
         }
 
         fun bind(sound: Sound) {
