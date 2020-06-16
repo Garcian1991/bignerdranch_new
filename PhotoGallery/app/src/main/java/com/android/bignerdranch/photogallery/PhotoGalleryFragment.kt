@@ -43,6 +43,12 @@ class PhotoGalleryFragment : Fragment() {
             photoHolder.bindDrawable(drawable)
         }
         lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
+        viewLifecycleOwnerLiveData.observe(this, Observer { owner ->
+            Log.i(TAG, "viewLifecycleOwner has been called ${ if (owner == null) "NULL" else "NOT NULL"}")
+            owner?.lifecycle?.addObserver(
+                thumbnailDownloader.viewLifecycleObserver
+            )
+        })
     }
 
     override fun onDestroy() {
@@ -55,9 +61,6 @@ class PhotoGalleryFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewLifecycleOwner.lifecycle.addObserver(
-            thumbnailDownloader.viewLifecycleObserver
-        )
         val view = inflater.inflate(R.layout.fragment_photo_gallery, container, false)
 
         photoRecyclerView = view.findViewById(R.id.photo_recycler_view)
@@ -73,13 +76,6 @@ class PhotoGalleryFragment : Fragment() {
             Observer { galleryItems ->
                 photoRecyclerView.adapter = PhotoAdapter(galleryItems)
             }
-        )
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewLifecycleOwner.lifecycle.removeObserver(
-            thumbnailDownloader.viewLifecycleObserver
         )
     }
 
