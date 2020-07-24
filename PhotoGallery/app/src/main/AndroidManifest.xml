@@ -2,7 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.bignerdranch.photogallery">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <permission
+        android:name="com.android.bignerdranch.photogallery.PRIVATE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.android.bignerdranch.photogallery.PRIVATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".PhotoGalleryApplication"
@@ -19,6 +24,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".NotificationReceiver"
+            android:exported="false"
+            android:permission="com.android.bignerdranch.photogallery.PRIVATE">
+            <intent-filter android:priority="-999">
+                <action android:name="com.android.bignerdranch.photogallery.SHOW_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
